@@ -141,9 +141,9 @@ export default function Home() {
   console.log("Component render - historyLoading:", historyLoading, "history.length:", history.length);
 
   return (
-    <div className="w-screen h-screen relative bg-black overflow-hidden">
+    <div className="w-screen h-screen relative bg-black overflow-hidden" style={{ backgroundColor: '#000000' }}>
       {/* Background Grid */}
-      <div className="w-full h-full absolute inset-0 overflow-y-auto">
+      <div className="w-full h-full absolute inset-0 overflow-y-auto overscroll-contain" style={{ overscrollBehavior: 'contain' }}>
         {historyLoading ? (
           <div className="flex items-center justify-center h-full">
             {/* <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div> */}
@@ -154,7 +154,7 @@ export default function Home() {
             <p className="text-white text-lg">No images generated yet. Create your first image below!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 pb-32" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
             {/* Loading placeholder when generating */}
             {(showLoader || debugLoading) && (
               <div className="relative aspect-square bg-[#353535] flex items-center justify-center overflow-hidden">
@@ -187,7 +187,7 @@ export default function Home() {
                 
                 {/* Hover overlay */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <div className="h-20 p-4 absolute bottom-0 left-0 w-full inline-flex justify-between items-start overflow-hidden">
+                  <div className=" p-4 absolute bottom-0 left-0 w-full inline-flex justify-between items-start overflow-hidden">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -196,7 +196,7 @@ export default function Home() {
                       className="h-11 px-4 bg-black/40 rounded-xl shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.10)] backdrop-blur-[32px] flex justify-center items-center gap-2 overflow-hidden hover:bg-black/60 transition-colors"
                     >
                       <PhotoIcon className="w-6 h-6 text-white" />
-                      <div className="text-center justify-start text-white text-lg font-medium font-['Inter']">
+                      <div className="text-center justify-start text-white  font-medium font-['Inter']">
                         Use as reference
                       </div>
                     </button>
@@ -255,7 +255,7 @@ export default function Home() {
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="What would you like to make?"
+                placeholder="Describe your image"
                 className="w-full bg-transparent text-white text-lg font-medium font-['Inter'] placeholder-white/60 outline-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !loading && prompt.trim()) {
@@ -270,7 +270,19 @@ export default function Home() {
               className="w-12 h-12 bg-white rounded-3xl flex justify-center items-center gap-1 overflow-hidden disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+                <div className="animate-spin w-6 h-6">
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="60 40" className="text-black opacity-25"/>
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="15 85" strokeDashoffset="0" className="text-black">
+                      <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        dur="1s"
+                        repeatCount="indefinite"
+                        values="0 12 12;360 12 12"/>
+                    </circle>
+                  </svg>
+                </div>
               ) : (
                 <ArrowUpIcon className="w-6 h-6 text-black" />
               )}
