@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { GeneratedImage } from "@/lib/supabase";
 import { XMarkIcon, PlusIcon, ArrowUpIcon, PhotoIcon, ArrowDownTrayIcon } from '@heroicons/react/16/solid'
+import ParticleSystem from "@/components/ParticleSystem";
 
 interface GenerationResult {
   success: boolean;
@@ -23,6 +24,7 @@ export default function Home() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [modalImage, setModalImage] = useState<string | null>(null);
+  const [debugLoading, setDebugLoading] = useState(false);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -85,6 +87,20 @@ export default function Home() {
     fetchHistory();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Toggle debug loading with Cmd/Ctrl + D
+      if ((event.metaKey || event.ctrlKey) && event.key === 'd') {
+        event.preventDefault();
+        setDebugLoading(prev => !prev);
+        console.log('Debug loading toggled:', !debugLoading);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [debugLoading]);
+
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setImageUrl(imageUrl);
@@ -133,6 +149,21 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+            {/* Loading placeholder when generating */}
+            {(loading || debugLoading) && (
+              <div className="relative aspect-square bg-[#353535] flex items-center justify-center overflow-hidden">
+                <ParticleSystem 
+                  color1={[0.1*0.9, 0.1*0.9, 0.1]}
+                  color2={[0.3*0.9, 0.3*0.9, 0.3]}
+                  color3={[0.5*0.9, 0.5*0.9, 0.5]}
+                  color4={[0.9*0.9, 0.9*0.9, 0.9]}
+                  speed={1.0}
+                />
+                <div className="relative z-10 text-center">
+                  <p className="text-white font-medium font-['Inter'] text-lg">Generating...</p>
+                </div>
+              </div>
+            )}
             {history.map((item) => (
               <div 
                 key={item.id} 
@@ -156,7 +187,7 @@ export default function Home() {
                         e.stopPropagation();
                         handleImageClick(item.image_url);
                       }}
-                      className="h-11 px-4 py-2 bg-black/40 rounded-xl shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.10)] backdrop-blur-[32px] flex justify-center items-center gap-2 overflow-hidden hover:bg-black/60 transition-colors"
+                      className="h-11 px-4 bg-black/40 rounded-xl shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.10)] backdrop-blur-[32px] flex justify-center items-center gap-2 overflow-hidden hover:bg-black/60 transition-colors"
                     >
                       <PhotoIcon className="w-6 h-6 text-white" />
                       <div className="text-center justify-start text-white text-lg font-medium font-['Inter']">
