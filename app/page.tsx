@@ -25,11 +25,13 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [modalImage, setModalImage] = useState<string | null>(null);
   const [debugLoading, setDebugLoading] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
     setLoading(true);
+    setShowLoader(true);
     setResult(null);
 
     try {
@@ -38,9 +40,9 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           prompt,
-          image_url: selectedImage || imageUrl.trim() || undefined 
+          image_url: imageUrl || undefined,
         }),
       });
 
@@ -49,7 +51,11 @@ export default function Home() {
       
       // Refresh history after successful generation
       if (data.success) {
-        fetchHistory();
+        await fetchHistory();
+        // Hide loader after history is refreshed
+        setShowLoader(false);
+      } else {
+        setShowLoader(false);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -57,11 +63,11 @@ export default function Home() {
         success: false,
         error: "Failed to generate image",
       });
+      setShowLoader(false);
     } finally {
       setLoading(false);
     }
   };
-
   const fetchHistory = async () => {
     try {
       console.log("Fetching history...");
@@ -150,7 +156,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
             {/* Loading placeholder when generating */}
-            {(loading || debugLoading) && (
+            {(showLoader || debugLoading) && (
               <div className="relative aspect-square bg-[#353535] flex items-center justify-center overflow-hidden">
                 <ParticleSystem 
                   color1={[0.1*0.9, 0.1*0.9, 0.1]}
