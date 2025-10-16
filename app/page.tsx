@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { GeneratedImage } from "@/lib/supabase";
+import { XMarkIcon, PlusIcon, ArrowUpIcon } from '@heroicons/react/16/solid'
 
 interface GenerationResult {
   success: boolean;
@@ -130,11 +131,11 @@ export default function Home() {
       </div>
 
       {/* Gradient Overlay */}
-      <div className="w-full h-40 absolute bottom-0 left-0 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none"></div>
+      <div className="w-full h-40 absolute bottom-0 left-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none"></div>
 
       {/* Floating Input Bar */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-[633px] px-4">
-        <div className="bg-black/40 backdrop-blur-[32px] rounded-[32px] p-2 inline-flex flex-col justify-center items-start overflow-hidden">
+        <div className="bg-black/40 backdrop-blur-[32px] rounded-[32px] p-2 flex flex-col justify-center items-start overflow-hidden w-full">
           {/* Selected Image Preview */}
           {selectedImage && (
             <div className="self-stretch pl-3 pt-3 inline-flex justify-start items-center gap-1">
@@ -151,9 +152,9 @@ export default function Home() {
                       setSelectedImage(null);
                       setImageUrl("");
                     }}
-                    className="w-3 h-3 relative overflow-hidden"
+                    className="w-4 h-4 relative overflow-hidden"
                   >
-                    <div className="w-1.5 h-1.5 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900"></div>
+                    <XMarkIcon className="w-4 h-4 text-slate-900" />
                   </button>
                 </div>
               </div>
@@ -179,22 +180,12 @@ export default function Home() {
             <button
               onClick={handleGenerate}
               disabled={loading || !prompt.trim()}
-              className="w-12 h-12 bg-white rounded-3xl flex justify-center items-center gap-1 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed mr-2"
+              className="w-12 h-12 bg-white rounded-3xl flex justify-center items-center gap-1 overflow-hidden disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
               ) : (
-                <div className="w-6 h-6 relative">
-                  <div className="w-6 h-6 absolute overflow-hidden">
-                    <svg
-                      className="w-4 h-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-180 text-black"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M8 0a.5.5 0 0 1 .5.5v7h7a.5.5 0 0 1 0 1h-7v7a.5.5 0 0 1-1 0v-7h-7a.5.5 0 0 1 0-1h7v-7A.5.5 0 0 1 8 0z" />
-                    </svg>
-                  </div>
-                </div>
+                <ArrowUpIcon className="w-6 h-6 text-black" />
               )}
             </button>
           </div>
