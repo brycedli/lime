@@ -10,6 +10,5 @@ export type GeneratedImage = {
   prompt: string
   image_url: string
   request_id: string | null
-  reference_image_url: string | null
   created_at: string
 }

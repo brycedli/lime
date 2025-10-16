@@ -13,12 +13,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Choose model based on whether reference image is provided
+    const model = image_url ? "fal-ai/flux-pro/kontext" : "fal-ai/flux/schnell";
+    
     const input: any = { prompt };
     if (image_url) {
       input.image_url = image_url;
     }
 
-    const result = await fal.subscribe("fal-ai/flux-pro/kontext", {
+    const result = await fal.subscribe(model, {
       input,
       logs: true,
       onQueueUpdate: (update: any) => {
@@ -41,7 +44,6 @@ export async function POST(request: NextRequest) {
           prompt: prompt,
           image_url: imageUrl,
           request_id: result.requestId,
-          reference_image_url: image_url || null,
         });
 
       if (dbError) {

@@ -20,6 +20,7 @@ export default function Home() {
   const [result, setResult] = useState<GenerationResult | null>(null);
   const [history, setHistory] = useState<GeneratedImage[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -35,7 +36,7 @@ export default function Home() {
         },
         body: JSON.stringify({ 
           prompt,
-          image_url: imageUrl.trim() || undefined 
+          image_url: selectedImage || imageUrl.trim() || undefined 
         }),
       });
 
@@ -59,11 +60,17 @@ export default function Home() {
 
   const fetchHistory = async () => {
     try {
+      console.log("Fetching history...");
       const response = await fetch("/api/history");
       const data = await response.json();
       
+      console.log("History response:", data);
+      
       if (data.success) {
+        console.log("Setting history data:", data.data);
         setHistory(data.data);
+      } else {
+        console.error("History fetch failed:", data.error);
       }
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -76,169 +83,132 @@ export default function Home() {
     fetchHistory();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            AI Image Generator
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Generate stunning images with Fal AI Flux Pro Kontext
-          </p>
-        </div>
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setImageUrl(imageUrl);
+  };
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="prompt"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+  // Debug logging
+  console.log("Component render - historyLoading:", historyLoading, "history.length:", history.length);
+
+  return (
+    <div className="w-screen h-screen relative bg-black overflow-hidden">
+      {/* Background Grid */}
+      <div className="w-full h-full absolute inset-0 overflow-y-auto">
+        {historyLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <span className="ml-3 text-white text-lg">Loading history...</span>
+          </div>
+        ) : history.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-white text-lg">No images generated yet. Create your first image below!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 gap-1">
+            {history.map((item) => (
+              <div 
+                key={item.id} 
+                className="relative aspect-square cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => handleImageClick(item.image_url)}
               >
-                Enter your prompt
-              </label>
-              <textarea
-                id="prompt"
+                <Image
+                  src={item.image_url}
+                  alt={item.prompt}
+                  fill
+                  className="object-cover"
+                />
+                {selectedImage === item.image_url && (
+                  <div className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-black rounded-full"></div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Gradient Overlay */}
+      <div className="w-full h-40 absolute bottom-0 left-0 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none"></div>
+
+      {/* Floating Input Bar */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-[633px] px-4">
+        <div className="bg-black/40 backdrop-blur-[32px] rounded-[32px] p-2 inline-flex flex-col justify-center items-start overflow-hidden">
+          {/* Selected Image Preview */}
+          {selectedImage && (
+            <div className="self-stretch pl-3 pt-3 inline-flex justify-start items-center gap-1">
+              <div className="w-14 h-14 relative rounded-xl overflow-hidden">
+                <Image
+                  src={selectedImage}
+                  alt="Selected reference"
+                  fill
+                  className="object-cover"
+                />
+                <div className="w-5 h-5 absolute top-1 right-1 bg-white rounded-full inline-flex justify-center items-center gap-1 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setSelectedImage(null);
+                      setImageUrl("");
+                    }}
+                    className="w-3 h-3 relative overflow-hidden"
+                  >
+                    <div className="w-1.5 h-1.5 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900"></div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Input Row */}
+          <div className="self-stretch pl-3 inline-flex justify-between items-center">
+            <div className="flex-1 py-2 flex justify-start items-center gap-1">
+              <input
+                type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe the image you want to generate..."
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-                rows={4}
+                placeholder="What would you like to make?"
+                className="w-full bg-transparent text-white text-lg font-medium font-['Inter'] placeholder-white/60 outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !loading && prompt.trim()) {
+                    handleGenerate();
+                  }
+                }}
               />
-            </div>
-            <div>
-              <label
-                htmlFor="imageUrl"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Reference Image URL (optional)
-              </label>
-              <input
-                id="imageUrl"
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Provide an image URL to modify an existing image with your prompt
-              </p>
             </div>
             <button
               onClick={handleGenerate}
               disabled={loading || !prompt.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+              className="w-12 h-12 bg-white rounded-3xl flex justify-center items-center gap-1 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed mr-2"
             >
-              {loading ? "Generating..." : "Generate Image"}
+              {loading ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+              ) : (
+                <div className="w-6 h-6 relative">
+                  <div className="w-6 h-6 absolute overflow-hidden">
+                    <svg
+                      className="w-4 h-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-180 text-black"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M8 0a.5.5 0 0 1 .5.5v7h7a.5.5 0 0 1 0 1h-7v7a.5.5 0 0 1-1 0v-7h-7a.5.5 0 0 1 0-1h7v-7A.5.5 0 0 1 8 0z" />
+                    </svg>
+                  </div>
+                </div>
+              )}
             </button>
           </div>
         </div>
-
-        {loading && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600 dark:text-gray-300">
-                Generating your image...
-              </span>
-            </div>
-          </div>
-        )}
-
-        {result && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            {result.success && result.data?.images ? (
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Generated Image
-                </h3>
-                <div className="grid gap-4">
-                  {result.data.images.map((image, index) => (
-                    <div key={index} className="relative">
-                      <Image
-                        src={image.url}
-                        alt={`Generated image ${index + 1}`}
-                        width={512}
-                        height={512}
-                        className="rounded-lg shadow-md w-full h-auto"
-                      />
-                    </div>
-                  ))}
-                </div>
-                {result.requestId && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Request ID: {result.requestId}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-red-600 dark:text-red-400">
-                  <h3 className="text-lg font-semibold mb-2">Error</h3>
-                  <p>{result.error || "Failed to generate image"}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* History Section */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Generation History
-          </h2>
-          
-          {historyLoading ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600 dark:text-gray-300">
-                  Loading history...
-                </span>
-              </div>
-            </div>
-          ) : history.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-              <p className="text-gray-600 dark:text-gray-300">
-                No images generated yet. Create your first image above!
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {history.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
-                >
-                  <div className="relative aspect-square">
-                    <Image
-                      src={item.image_url}
-                      alt={item.prompt}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-3">
-                      {item.prompt}
-                    </p>
-                    {item.reference_image_url && (
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">
-                        📷 Used reference image
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                      {new Date(item.created_at).toLocaleDateString()} at{" "}
-                      {new Date(item.created_at).toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* Error Display */}
+      {result && !result.success && (
+        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-red-500/20 backdrop-blur-sm border border-red-500/30 rounded-lg p-4">
+          <p className="text-red-200 text-center">
+            {result.error || "Failed to generate image"}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
