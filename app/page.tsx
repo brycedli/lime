@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { GeneratedImage } from "@/lib/supabase";
-import { XMarkIcon, PlusIcon, ArrowUpIcon } from '@heroicons/react/16/solid'
+import { XMarkIcon, PlusIcon, ArrowUpIcon, PhotoIcon } from '@heroicons/react/16/solid'
 
 interface GenerationResult {
   success: boolean;
@@ -110,8 +110,7 @@ export default function Home() {
             {history.map((item) => (
               <div 
                 key={item.id} 
-                className="relative aspect-square cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleImageClick(item.image_url)}
+                className="relative aspect-square group overflow-hidden"
               >
                 <Image
                   src={item.image_url}
@@ -119,11 +118,23 @@ export default function Home() {
                   fill
                   className="object-cover"
                 />
-                {selectedImage === item.image_url && (
-                  <div className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-black rounded-full"></div>
+                
+                
+                
+                {/* Hover overlay */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="p-4 absolute bottom-0 left-0 inline-flex flex-col justify-start items-start gap-1 overflow-hidden">
+                    <button
+                      onClick={() => handleImageClick(item.image_url)}
+                      className="h-11 px-4 py-2 bg-black/40 rounded-xl shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.10)] backdrop-blur-[32px] inline-flex justify-center items-center gap-2 overflow-hidden hover:bg-black/60 transition-colors"
+                    >
+                      <PhotoIcon className="w-6 h-6 text-white" />
+                      <div className="text-center justify-start text-white text-lg font-medium font-['Inter']">
+                        Use as reference
+                      </div>
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
@@ -135,7 +146,7 @@ export default function Home() {
 
       {/* Floating Input Bar */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-[633px] px-4">
-        <div className="bg-black/40 backdrop-blur-[32px] rounded-[32px] p-2 flex flex-col justify-center items-start overflow-hidden w-full">
+        <div className="bg-black/40 backdrop-blur-[32px] rounded-[32px] p-2 flex flex-col justify-center items-start overflow-hidden w-full  shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.10)]">
           {/* Selected Image Preview */}
           {selectedImage && (
             <div className="self-stretch pl-3 pt-3 inline-flex justify-start items-center gap-1">
