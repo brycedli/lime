@@ -26,6 +26,7 @@ export default function Home() {
   const [modalImage, setModalImage] = useState<string | null>(null);
   const [debugLoading, setDebugLoading] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -110,6 +111,7 @@ export default function Home() {
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setImageUrl(imageUrl);
+    setAnimationKey(prev => prev + 1); // Trigger re-animation
   };
 
   const handleDownload = async (imageUrl: string, prompt: string) => {
@@ -141,7 +143,24 @@ export default function Home() {
   console.log("Component render - historyLoading:", historyLoading, "history.length:", history.length);
 
   return (
-    <div className="w-screen h-screen relative bg-black overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <>
+      <style jsx>{`
+        @keyframes bounceUp {
+          0% {
+            transform: translateY(20px) scale(0.8);
+            opacity: 0;
+          }
+          50% {
+            transform: translateY(-5px) scale(1.05);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(0px) scale(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
+      <div className="w-screen h-screen relative bg-black overflow-hidden" style={{ backgroundColor: '#000000' }}>
       {/* Background Grid */}
       <div className="w-full h-full absolute inset-0 overflow-y-auto overscroll-contain" style={{ overscrollBehavior: 'contain' }}>
         {historyLoading ? (
@@ -226,7 +245,13 @@ export default function Home() {
           {/* Selected Image Preview */}
           {selectedImage && (
             <div className="self-stretch pl-3 pt-3 inline-flex justify-start items-center gap-1">
-              <div className="w-14 h-14 relative rounded-xl overflow-hidden">
+              <div 
+                key={animationKey}
+                className="w-14 h-14 relative rounded-xl overflow-hidden"
+                style={{
+                  animation: 'bounceUp 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                }}
+              >
                 <Image
                   src={selectedImage}
                   alt="Selected reference"
@@ -325,5 +350,6 @@ export default function Home() {
         </div>
       )}
     </div>
+    </>
   );
 }
