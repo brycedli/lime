@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { GeneratedImage } from "@/lib/supabase";
-import { XMarkIcon, PlusIcon, ArrowUpIcon, PhotoIcon } from '@heroicons/react/16/solid'
+import { XMarkIcon, PlusIcon, ArrowUpIcon, PhotoIcon, ArrowDownTrayIcon } from '@heroicons/react/16/solid'
 
 interface GenerationResult {
   success: boolean;
@@ -22,6 +22,7 @@ export default function Home() {
   const [history, setHistory] = useState<GeneratedImage[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [modalImage, setModalImage] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -89,6 +90,31 @@ export default function Home() {
     setImageUrl(imageUrl);
   };
 
+  const handleDownload = async (imageUrl: string, prompt: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${prompt.slice(0, 50).replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
+
+  const openModal = (imageUrl: string) => {
+    setModalImage(imageUrl);
+  };
+
+  const closeModal = () => {
+    setModalImage(null);
+  };
+
   // Debug logging
   console.log("Component render - historyLoading:", historyLoading, "history.length:", history.length);
 
@@ -98,7 +124,7 @@ export default function Home() {
       <div className="w-full h-full absolute inset-0 overflow-y-auto">
         {historyLoading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            {/* <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div> */}
             <span className="ml-3 text-white text-lg">Loading history...</span>
           </div>
         ) : history.length === 0 ? (
@@ -106,11 +132,12 @@ export default function Home() {
             <p className="text-white text-lg">No images generated yet. Create your first image below!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
             {history.map((item) => (
               <div 
                 key={item.id} 
-                className="relative aspect-square group overflow-hidden"
+                className="relative aspect-square group overflow-hidden cursor-pointer"
+                onClick={() => openModal(item.image_url)}
               >
                 <Image
                   src={item.image_url}
@@ -123,15 +150,27 @@ export default function Home() {
                 
                 {/* Hover overlay */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <div className="p-4 absolute bottom-0 left-0 inline-flex flex-col justify-start items-start gap-1 overflow-hidden">
+                  <div className="h-20 p-4 absolute bottom-0 left-0 w-full inline-flex justify-between items-start overflow-hidden">
                     <button
-                      onClick={() => handleImageClick(item.image_url)}
-                      className="h-11 px-4 py-2 bg-black/40 rounded-xl shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.10)] backdrop-blur-[32px] inline-flex justify-center items-center gap-2 overflow-hidden hover:bg-black/60 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleImageClick(item.image_url);
+                      }}
+                      className="h-11 px-4 py-2 bg-black/40 rounded-xl shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.10)] backdrop-blur-[32px] flex justify-center items-center gap-2 overflow-hidden hover:bg-black/60 transition-colors"
                     >
                       <PhotoIcon className="w-6 h-6 text-white" />
                       <div className="text-center justify-start text-white text-lg font-medium font-['Inter']">
                         Use as reference
                       </div>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(item.image_url, item.prompt);
+                      }}
+                      className="w-11 h-11 bg-black/40 rounded-xl shadow-[inset_0px_0px_0px_1px_rgba(255,255,255,0.10)] backdrop-blur-[32px] flex justify-center items-center gap-2 overflow-hidden hover:bg-black/60 transition-colors"
+                    >
+                      <ArrowDownTrayIcon className="w-6 h-6 text-white" />
                     </button>
                   </div>
                 </div>
@@ -209,6 +248,31 @@ export default function Home() {
           <p className="text-red-200 text-center">
             {result.error || "Failed to generate image"}
           </p>
+        </div>
+      )}
+
+      {/* Image Modal */}
+      {modalImage && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-8"
+          onClick={closeModal}
+        >
+          <div className="relative max-w-full max-h-full rounded-4xl overflow-hidden">
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-3 w-12 h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-colors z-10"
+            >
+              <XMarkIcon className="w-8 h-8 text-white" />
+            </button>
+            <Image
+              src={modalImage}
+              alt="Full size image"
+              width={1024}
+              height={1024}
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
         </div>
       )}
     </div>
