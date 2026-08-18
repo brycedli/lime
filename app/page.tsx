@@ -106,7 +106,7 @@ export default function Home() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [debugLoading]);
+  }, []);
 
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);

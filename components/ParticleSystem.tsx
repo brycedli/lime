@@ -18,7 +18,7 @@ export default function ParticleSystem({
   speed = 3.0
 }: ParticleSystemProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
   const glRef = useRef<WebGLRenderingContext | null>(null);
   const programRef = useRef<WebGLProgram | null>(null);
   const timeRef = useRef<number>(0);
@@ -203,7 +203,7 @@ export default function ParticleSystem({
 
     // Animation loop
     function animate() {
-      if (!gl || !program || !buffer) return;
+      if (!canvas || !gl || !program || !buffer) return;
 
       timeRef.current += 1;
 
